@@ -1,0 +1,68 @@
+\usepackage{microtype}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{tabulary}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{adjustbox}
+\usepackage{algpseudocode}
+\usepackage{xspace}
+\usepackage{multirow}
+\usepackage{lettrine}
+\usepackage{setspace}
+\usepackage{tcolorbox}
+\tcbuselibrary{minted,breakable,xparse,skins}
+
+\definecolor{bg}{gray}{0.95}
+\DeclareTCBListing{mintedbox}{O{}m!O{}}{%
+  breakable=true,
+  listing engine=minted,
+  listing only,
+  minted language=#2,
+  minted style=default,
+  minted options={%
+    linenos = false,
+    gobble=0,
+    breaklines=true,
+    breakafter=,,
+    fontsize=\small,
+    numbersep=8pt,
+    #1},
+  boxsep=0pt,
+  left skip=0pt,
+  right skip=0pt,
+  left=15pt,
+  right=15pt,
+  top=10pt,
+  bottom=10pt,
+  arc=0pt,
+  leftrule=0pt,
+  rightrule=0pt,
+  bottomrule=1pt,
+  toprule=1pt,
+  colback=bg,
+  colframe=orange!70,
+  enhanced,
+}
+
+\hypersetup{
+    pdftitle={Privacy monitoring of LoRaWAN devices through traffic stream analysis},
+    pdfauthor={Francesco Terenzi}
+}
+
+\onehalfspacing
+
+\newcommand{\lorawan}{LoRaWAN\xspace}
+\newcommand{\de}{DevEUI\xspace}
+\newcommand{\da}{DevAddr\xspace}
+\newcommand{\pivot}{PIVOT\xspace}
+\newcommand{\jr}{\textit{Join-request}\xspace}
+\newcommand{\ja}{\textit{Join-accept}\xspace}
+
+\newcommand{\blankpage}{
+    \newpage
+    \thispagestyle{empty}
+    \mbox{}
+    \newpage
+}

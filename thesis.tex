@@ -1,0 +1,79 @@
+% !TeX encoding = UTF-8
+% !TeX program = pdflatex
+% !TeX spellcheck = en_US
+
+\documentclass[LaM,binding=0.6cm, oneside]{sapthesis}
+
+\input{header}
+
+% Commands for the titlepage
+\title{Privacy monitoring of LoRaWAN devices\\ through traffic stream analysis}
+\author{Francesco Terenzi}
+\IDnumber{1702217}
+\course{Cybersecurity}
+\courseorganizer{Facolt\`{a} di Ingegneria dell'Informazione, Informatica e Statistica}
+\AcademicYear{2020/2021}
+\copyyear{2021}
+\advisor{Prof. Francesca Cuomo}
+\coadvisor{Ing. Pietro Spadaccino}
+\authoremail{info@francescoterenzi.it}
+
+%\examdate{16 April 2013}
+%\examiner{Prof. Nome Cognome}
+%\examiner{Prof. Nome Cognome}
+%\examiner{Dr. Nome Cognome}
+\versiondate{\today}
+
+
+
+\begin{document}
+
+\frontmatter
+\maketitle
+\dedication{Dedicated to}
+
+\blankpage
+
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+\blankpage
+
+\tableofcontents
+
+\mainmatter
+
+\input{introduction}
+\blankpage
+
+\input{lorawan}
+\blankpage
+
+\input{threat}
+\blankpage
+
+\input{pivot}
+\blankpage
+
+\input{countermeasures.tex}
+\blankpage
+
+\input{implementation}
+\blankpage
+
+\input{conclusions}
+\blankpage
+
+\backmatter
+% bibliography
+%\cleardoublepage
+
+\phantomsection
+
+\addcontentsline{toc}{chapter}{\bibname}
+
+\bibliographystyle{sapthesis} % BibTeX style
+\bibliography{bibliography} % BibTeX database without .bib extension
+
+\end{document}

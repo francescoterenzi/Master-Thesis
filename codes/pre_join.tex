@@ -1,0 +1,9 @@
+\begin{mintedbox}[samepage]{python}
+def __pre_join(self, p):
+    devaddr = p.dev_addr
+
+    if devaddr in self.confirmed:
+        self.confirmed[devaddr].update(p.t)
+    else:
+        self.confirmed[devaddr] = Pattern(p.t)
+\end{mintedbox}

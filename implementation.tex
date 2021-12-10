@@ -1,0 +1,66 @@
+\chapter{Implementation and Results}
+\label{implementation}
+This chapter presents an implementation of PIVOT and discusses the results. 
+
+\section{Implementation}
+\label{implementation_2}
+To evaluate PIVOT, we simulated a real-time LoRaWAN network. In detail, our simulator is composed of the \textit{generator}, that produces fake LoRa packets, and \textit{pivot}, that receives and analyzes them.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/implementation/simulator.png}
+    \caption{The architecture of the simulator}
+    \label{fig:simulator}
+\end{figure}
+
+\subsubsection{\textit{generator}}
+In \textit{generator} we can set the number of devices to insert in the network, the periodic pattern they had to follow, and the number of re-joins each of them can make. 
+
+\subsubsection{\textit{pivot}}
+As detailed in the previous section, to reduce the detection rate of PIVOT, the operator can change the pattern of vulnerable devices. We reported this scenario in our simulator: when \textit{pivot} alerts about a device, the \textit{generator} modifies its pattern, randomly changing the length of the segments.
+
+\subsection{Code snippets}
+In this section, we report and comment the main code snippets of our simulator.
+\subsubsection{Packet class}
+\input{codes/packet}
+
+\subsubsection{Traffic parameters}
+\input{codes/synth_traffic}
+
+\subsubsection{Pattern class}
+\input{codes/pattern}
+
+\subsubsection{Segment class}
+\input{codes/segment}
+
+\subsubsection{PIVOT class}
+\input{codes/pivot}
+
+\subsubsection{PIVOT functions}
+\input{codes/read_packet}
+\input{codes/pre_join}
+\input{codes/main_procedure}
+
+\section{Results}
+\label{results}
+\subsubsection{Metrics}
+PIVOT evaluates the number of vulnerable devices it identifies using the performance metrics of the Precision-Recall curve. In detail, given the following quantities:
+\begin{itemize}
+	\item True Positive (TP): number of correct re-identifications. 
+	\item False Positive (FP): number of false re-identifications.
+	\item False Negative (FN): number of missing re-identifications.
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/implementation/binary_classification.png}
+    \caption{Confusion matrix structure for binary classification problems}
+    \label{fig:classification}
+\end{figure}
+
+
+\subsubsection{Precision-Recall curve}
+The \textbf{Precision}, also known as Positive Predictive Value, is represented as:
+\[\ Precision = PPV = \frac{TP}{TP + FP} \] 
+The \textbf{Recall}, also known as \textit{sensitivity}, is represented as:
+\[ Recall = sensivity = \frac{TP}{TP + FN} \] 

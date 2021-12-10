@@ -1,0 +1,11 @@
+\begin{mintedbox}{python}
+def read_packet(self, p):
+    if (p.mtype == "Join Request"):
+        self.current_section += 1
+
+    else:
+        if self.current_section == 1:
+            self.__pre_join(p)
+        else:
+            self.__post_join(p)  
+\end{mintedbox}
