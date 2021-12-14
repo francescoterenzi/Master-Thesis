@@ -1,7 +1,9 @@
 \chapter{LoRaWAN}
 \label{lorawan}
 Today IoT devices use several different technologies to support their communications, but not all of them are suitable for modern applications. Well-known wireless solutions, such as Wi-Fi or Bluetooth, require a lot of energy to send data and have a limited transmission range. LoRaWAN protocol is ideal for applications requiring long-range or deep in-building communication among many battery-operated sensors since they have low power requirements and need to collect only small volumes of data. Since LoRaWAN packets require a minimal amount of energy to be sent and are transmitted a few times a day, the devices' battery can last for many years. Moreover, the network can support millions of messages. For example, a single eight-channel gateway carries hundred of thousand of messages daily and when applications require more capacity, it's enough to add additional gateways to the network.
-\\
+
+\vspace{5mm}
+
 To better comprehend the LoRaWAN protocol, we start by describing the technology stack. As shown in Figure \ref{fig:stack}, LoRa, which represents the physical (PHY) layer, is the wireless modulation used to create the long-range communication link. On the other side, LoRaWAN represents the MAC layer and is the networking protocol that provides services such as bi-directional communication, mobility, and localization services.
 \\
 In the following sections, first we brief analyze the key characteristics of the LoRa physical layer, then we detail LoRaWAN, describing its network architecture, the devices format, and the different activation methods.
@@ -27,7 +29,7 @@ These are the essential configuration parameters of LoRa radio
     \item \textbf{Carrier Frequency} (CF): It is the frequency used for the communications from node to the gateway. LoRa operates at unlicensed frequency ISM bands 863-870 MHz in Europe and 915 MHz in U.S. \cite{7925650}.
     \item \textbf{Spreading Factory} (SF): It is the number of chirps per symbol. As reported in Table \ref{tab:spreading}, LoRa has 6 SF, whereas higher SFs allow larger coverage areas and, one symbol has 2 SF chirps for the overall frequency.
 
-    \input{spreading_factor} 
+    \input{tables/spreading_factor} 
 
     \item \textbf{Bandwidth} (BW): LoRa has three bandwidth options: 125 kHz, 250 kHz, and 500 kHz. The 125 kHz bandwidth is used for the 863-870 MHz frequency band, the 500 kHz bandwidth for rapid transmissions, and the 125 kHz bandwidth to cover wide areas. The correlation among duration of symbol \(\ T_{s} \), the bandwidth \textit{BW}, and the spreading factor \textit{SF} is given by:
     
@@ -47,7 +49,7 @@ These parameters impact the receiver sensitivity. As the bandwidth increases, th
 % architecture
 \section{LoRaWAN network topology}
 \label{topology}
-Typically, IoT applications adopt a mesh architecture to increase communication ranges and cell sizes of the network. However, this approach can affect the device's battery life \cite{article}, as the nodes have to forward messages to each other. Conversely, to increase sensors' lifetime, the LoRaWAN network uses the simpler star-of-stars topology.  This architecture consists of the following elements:
+Typically, IoT applications adopt a mesh architecture to increase communication ranges and cell sizes of the network. However, this approach can affect the device's battery life, as the nodes have to forward messages to each other \cite{article}. Conversely, to increase sensors' lifetime, the LoRaWAN network uses the simpler star-of-stars topology.  This architecture consists of the following elements:
 \begin{figure}
     \centering
     \includegraphics[width=0.7\linewidth]{images/lorawan/architecture.png}
@@ -92,7 +94,7 @@ Since LoRaWAN networks use an ALOHA-based protocol, end devices don't need to be
 \end{figure}
 The LoRaWAN frame, shown in \ref{fig:frame}, is structured as follows:
 \begin{enumerate}
-	\item \textit{Physical Layer}.  It has a preamble, that defines the modulation scheme, followed by a header and a payload. The header contains information such as payload length and whether the Payload 16-bit CRC is present in the frame (only uplink frames contain payload CRC). The payload contains MAC Frame.
+	\item \textit{Physical Layer}.  It has a preamble, that defines the modulation scheme, followed by a header and a payload. The header contains information such as payload length and whether the Payload 16-bit CRC is present in the frame (only uplink frames contain payload CRC). The payload contains the MAC frame.
 	\item \textit{MAC Layer}. It consists of a header, a payload, and a Message Integrity Code (MIC). The header defines protocol version and message type, the payload contains the application data, and the MIC, computed using the header and the payload portions, is used to prevent the forgery of messages and authenticate the end node.
 	\item \textit{Application Layer}. It consists of a header, a port, which value depends on the application type, and the payload. The header contains information about the device and the network and commands used to change parameters such as the data rate or the transmission payload. The payload contains the transmitted data and is encrypted with the AES 128 algorithm. 
 \end{enumerate}
@@ -104,8 +106,8 @@ LoRaWAN message types transport MAC commands and application data. These message
 	\item Uplink messages are sent by ED to the Network Server, relayed by one or many gateways.
 	\item Each downlink message is sent by the Network Server to one ED and is relayed by a single gateway.
 \end{enumerate}
-LoRaWAN v1.1 defines several MAC message types, presented in the Table \ref{tab:message_types}. These messages are identified by the first bytes of the LoRaWAN packet, in the MHDR field, and specifically in a section of three \textit{bites}, called \textit{MType}.
-\input{message_types}
+LoRaWAN v1.1 defines several MAC message types, presented in the Table \ref{tab:message_types}. These messages are identified by the first bytes of the LoRaWAN packet, in the MHDR field, and specifically in a section of three bites, called \textit{MType}.
+\input{tables/message_types}
 \begin{enumerate}
 	\item Join Request, Join Accept and Re-Join are three messages used to establish a connection between the LoRa End Device and Network Server.
 	\item Confirmed Data are data messages that need to be acknowledged by the receiver.
@@ -115,9 +117,9 @@ LoRaWAN v1.1 defines several MAC message types, presented in the Table \ref{tab:
 
 \subsubsection{Addressing}
 Each device has a global address, the \textit{\de}. It is a unique EUI64 identifier supplied by the manufacturer, stored in non-volatile memory, and used as a MAC address. The first 3 bits represent the Organizationally Unique Identifier (OUI), purchased from IEEE that represents the constructor.
-\begin{figure}
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\linewidth]{images/lorawan/devaddr.PNG}
+    \includegraphics[width=0.7\linewidth]{images/lorawan/devaddr.PNG}
     \caption{DevAddr fields}
     \label{fig:devaddr}
 \end{figure}
