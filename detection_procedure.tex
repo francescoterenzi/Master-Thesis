@@ -1,0 +1,35 @@
+\subsection{Detection algorithm}
+The purpose of the detection algorithm is to detect potentially too exposed devices. It analyzes the LoRa traffic, keeps track of all the detected DevAddress, and uses a pattern-matching strategy to verify if two collected DevAddress could be associated with the same ED.
+
+\vspace{5mm}
+
+In detail, the detection algorithm uses a vector \(\ C \) to store all the identified patterns. It contains a series of elements \(\ P_{a} \), where \(\ a \) is the current DevAddress associated to an ED, and \(\ P_{a} = \{ s_{1}, ..., s_{n} \} \) is the pattern the device follows. Since different patterns necessarily describe distinct EDs, in \(\ C \), there cannot be two tuples denoting the same device. In other words, let \(\ E \) be the set of all the ED that currently join the network, we have:
+\[\ length(C) \subseteq length(E ) \]
+The vector \(\ C \) allows checking if a given device, represented by its current DevAddres \(\ a \), already exchanged messages in the network. When the detection algorithm reads a new packet with DevAddress \(\ a \), it observe if the condition \(\ P_{a} \in C \) occurs. If \(\ P_{a} \notin C \) and this happens after the interception of a Join-request message, PIVOT  cannot establish \textit{a priori} the nature of the device associated to \(\ a \). It initiates a pattern-matching process to compute if \(\ a \) belongs to a new device or a re-joined one, trying to achieve this task in the shortest time possible. In this way, in the case of potential matching, the algorithm minimizes the delay in triggering the alert.
+
+\vspace{5mm}
+
+Intercepting a Join-request message is a crucial part of the detection process. It permits PIVOT to comprehend which addresses it needs to investigate and which patterns we should use for the matching procedure. The pattern \(\ P_{a} \notin C \), associated with an unknown address \(\ a \), should \textit{not} be compared with all the other patterns of \(\ C \). We must exclude from our analysis all that pattern related to these two classes of addresses:
+
+\vspace{3mm}
+\begin{itemize}
+	\item All the addresses collected after the Join request, which have been noticed also before the Join-request. They are associated with devices that never disconnect from the network.
+	\item All the other unknown addresses received after the Join-request, since a new device that joins the network has not more than one DevAddr.
+\end{itemize}
+\vspace{3mm}
+
+The algorithm follows two sequential steps, called \textit{Pre-Join} procedure and \textit{Main} procedure. Figure \ref{fig:pre_main} illustrates the two procedures. Let \(\ t_{0} \) the timestamp of the first packet received by PIVOT after its activation and \(\ t_{f} \) the timestamp of the first Join-request packet. The Pre-Join procedure takes place in the time window \(\ t_{f} - t_{0} \) and the Main procedure starts after the reception of the first Join-Request message, at \(\ t_{f} \). In the next sections, we are going to examine these two steps in detail.
+
+\begin{figure}[H]
+    \centering
+    \vspace{4mm}
+    \includegraphics[width=0.7\linewidth]{images/pivot/pre-main.PNG}
+    \caption{Representation of the time windows of the Pre-Join and Main procedures}
+    \label{fig:pre_main}
+\end{figure}
+\vspace{5mm}
+
+\input{pre_join}
+\input{main_procedure}
+
+\input{metrics}

@@ -1,233 +1,189 @@
-\chapter{The Privacy monitoring system}
+\chapter{The privacy monitoring system}
 \label{pivot}
-In this chapter, we introduce a Privacy-Monitoring system for LoRaWAN, named PIVOT. In Section \ref{goals}, we explain the main requirements to satisfy in developing our system, and in Section \ref{system} we describe PIVOT in detail, going from the assumptions adopted to its core algorithm and the metrics used.
+As demonstrated in the previous chapter, although the LoRaWAN protocol is designed to be very secure, some still unsolved privacy issues can compromise the confidentiality of information exchanged within the LoRa network. In this chapter, we introduce \textit{PIVOT}, a LoRaWAN privacy monitoring system that, analyzing the traffic flow, detects any weak endpoint that could expose sensitive information to unauthorized parties. The goal of PIVOT is to strengthen the traffic exchanged between ED and servers to avoid adversaries from conducting privacy-related threats such as malicious fingerprints or information leaks.
+\\
+The rest of the chapter is structured as follows. First, in Section \ref{goals}, we present the main principle and guidelines used in designing our system. In Section \ref{system}, we deepen PIVOT, going from the assumptions to the definition of the detection algorithm. Finally, we illustrate the core metrics supplied by PIVOT that the operator can use to monitor the network environment and check the current status of devices.
+\vspace{5mm}
 
 \section{Design Goals}
 \label{goals}
 The following are the main points followed for the development of PIVOT.
 \begin{enumerate}
-	\item \textit{Strengthening} of the network.Our system should represent an additional security layer for the LoRaWAN protocol that can better preserve the confidentiality of the LoRa traffic exchanged between the endpoints and the Network Server 
-	\item \textit{Detection} of vulnerable devices. Keeping in mind the threat described in Section \ref{address_identification},  PIVOT should identify the endpoints to which addresses could be linked by unauthorized listeners.
-	\item \textit{Monitoring} the status of end-device. Our system should give the network operator a transparent vision of the state of the network, displaying the number of detected devices. 
-	\item \textit{Modelling} the behavior of periodic devices. PIVOT should recognize the EDs that sends packets regularly and model their respective pattern.
+	\item \textit {Detection} of vulnerable devices. To avoid the threat described in Section \ref {address_identification}, PIVOT should properly identify that endpoints of the network whose \textit {DevAddr} - \textit {DevEUI} address pair could be discovered by unauthorized listeners.
+	\item \textit{Monitoring} the status of end-device. Our system should give the operator a transparent vision of the state of the network, showing, for example, the number of detected devices. 
+	\item \textit{Strengthening} of the network.Our system should represent an additional security layer for the LoRaWAN protocol to better preserve the confidentiality of the LoRa traffic exchanged between the endpoints and the Network Server.
+	\item \textit{Modelling} the behavior of periodic devices. Since EDs that send packets regularly are inclined to threat we are trying to avoid, PIVOT should discover and model their behavior.
+	\item \textit{Stream} of data. PIVOT should constantly analyze the traffic. Since it cannot analyze the entire group of messages only once they have all been sent, it has to make a decision every time a single message is exchanged.
 	\item \textit{Minimize} the delay. Vulnerable devices need to be detected quickly to leave them exposed as little time as possible.
 	\item \textit{Accuracy} of the detection. The detection procedure of PIVOT should be detailed and precise as far as possible. The error rate should be kept low.
-	\item \textit{Easy and Lightweight}. The system should be designed to have a small memory footprint (RAM usage) and low CPU usage, overall a low usage of system resources.
-	\item \textit{Passivity} of the system. Our engine should collect and analyzes uplink LoRa packets without interfering with the normal operations of the network.
-	\item \textit{Scalability}. Our program should be able to scale, working well on both a small data set and a larger one.
+	\item \textit{Lightweight}. The system should be designed to have a small memory footprint (RAM usage) and low CPU usage, overall a low usage of system resources.
+	\item \textit{Filter} only the necessary data from all network traffic. As we will explain later, not all LoRa messages are relevant to our goal.
+	\item \textit{Passivity}. Our system should collect and analyze the packets without interfering with the normal operations of the network.
+	\item \textit{Scalability}. PIVOT should be able to scale, working well on both a small data set and a larger one.
 \end{enumerate}
+
+\newpage
 
 \section{System Description}
 \label{system}
-% detection procedure
-The main policy of our system is to detect and protect devices in the LoRa network that are vulnerable to information disclosure. Going into detail, PIVOT passively collects and analyzes LoRa RF messages. When it discovers an uplink frame sent from a device with a DevAddress \(\ a \) it has never seen, checks which of the following two circumstances is met:
-\begin{enumerate}
-	\item The DevAddress \(\ a \) is linked to an ED that joins the network for the first time.
-	\item The DevAddress \(\ a \) is linked to an ED already in the network that has disconnected and performed a new join procedure.
-\end{enumerate}
-In the case of the second scenario, PIVOT recognizes the weakness of the ED and it notifies the operator, that had to modify the parameters of the device to prevent it from being identified again.
-
-\vspace{5mm} %5mm vertical space
-
-% monitoring procedure
-In addition, PIVOT supports the network operator in optimization operations. By monitoring the traffic, it computes a set of statistical metrics that display to the administrator the actual state of the network, reporting the current number of join/re-joined devices and correlated percentage of vulnerable endpoints that are still operating. In this way, the operator can check the level of security of the network and, if needed, execute actions to lower the level of exposed EDs.
-
-\vspace{5mm} %5mm vertical space
-
-% architecture
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\linewidth]{images/pivot/architecture.png}
-    \caption{The coverage area of PIVOT}
-    \label{fig:piv_architecture}
-\end{figure}
-As shown in Figure \ref{fig:piv_architecture}, our system eavesdrops on the whole LoRa radio link area, filtering only \textit{uplink} LoRa packets that endpoints send to the Network Server. Since symmetric key encryption is applied only to the payload, PIVOT has complete access to the text-clear header of the frames it collects. In particular, it requires the fields reported in Table \ref{tab:keys}.
-\begin{table}[h!]
-    \caption{Key fields in the header, used by PIVOT}
-    \label{tab:keys}
-    \centering
-    \begin{tabular}{|l|l|}
-    \hline
-        \textbf{PARAMETER} & \textbf{DESCRIPTION}                       \\ \hline
-        DEV\_ADDR          & Unique identifier of the ED in the network \\ \hline
-        DEV\_EUI           & Unique identifier of the physical ED       \\ \hline
-	    FCnt		       & Frame counter                              \\ \hline
-        TMST               & Internal clock timestamp                   \\ \hline
-        TYPE               & Type of packet                             \\ \hline
-    \end{tabular}
-\end{table}
+The main policy of PIVOT is to \textit{detect} and \textit{protect} devices in the LoRa network that are vulnerable to information disclosure. In this section, we explain how our system can achieve this.
+\vspace{5mm}
 
 \subsection{Assumptions}
-We assume that PIVOT passively monitors the LoRa RF traffic, filtering only \textit{uplink} and \jr packets sent by EDs to the gateway. The endpoints of the LoRa network in which PIVOT operates should be LoRaWAN v1.1 compliant and keep the same DevAddress for the entire connection. When they disconnect or lose the connection with the Network Server, they should try a new activation procedure, which gives them the new DevAddress. We require that devices perform exclusively the Over-the-Air Activation (OTAA) to join the network so that PIVOT can intercept \jr messages with a DevEUI exposed in the header as part of the activation procedure.
+The endpoints of the LoRa network in which PIVOT operates should be LoRaWAN v1.1 compliant. If they get disconnected or lose the connection with the Network Server, should try a new activation procedure, which gives them a new DevAddress. Devices should perform exclusively the Over-the-Air Activation (OTAA) to join the network since PIVOT needs to intercept and collect \jr messages used in the activation procedure. This condition is satisfied because LoRaWAN specification recommends using OTAA for security and scalability reasons. 
 \\
-Another assumption is that these devices should transmit packets periodically. These conditions find evidence in real case studies. For example, the analysis carried out on a LoRaWAN service of an Italian operator \cite{devil} shows up that the majority of devices send 24 packets each hour, the 25th one after 30 seconds, and then repeat the process. In other words, when a device sends uplink packets periodically, it follows a temporal pattern that repeats continuously over time with a period \(\tau\).
+Another assumption is that these devices should transmit packets periodically. These requirements find evidence in real case studies. For example, the analysis carried out on a LoRaWAN service of an Italian operator \cite{devil} shows up that the majority of devices send 24 packets each hour, the 25th one after 30 seconds, and then repeat the process. We can argue that when a device sends packets periodically, it follows a temporal \textit{pattern}, a behavior repeated continuously over time.
+\vspace{5mm}
 
-\subsection{Patterns}
-In other words, when a device sends uplink packets periodically, it follows a temporal pattern that repeats continuously over time with a period \(\tau\). PIVOT focuses on the time elapsed between an uplink message and the next one from the same endpoint.
+\subsection{Architecture}
+Figure \ref{fig:pivarchitecture} reports the high-level architecture of PIVOT. 
 \begin{figure}
     \centering
+    \includegraphics[width=0.7\linewidth]{images/pivot/architecture_detail.png}
+    \caption{The architecture of PIVOT}
+    \vspace{4ex}%
+    \label{fig:pivarchitecture}
+\end{figure}
+The system passively collects the LoRa stream, filtering \textit{uplink} and \textit{join-request} messages, the only needed for our purpose.
+\\
+Each elaborated frame represents the input of the so-called \textit{detection} algorithm. This procedure, which is the core of PIVOT, analyzes the incoming messages and tries to deduce if the devices that generated them could be at risk and, in that case, it triggers an alert to the network operator.
+\\
+During its analysis, the detection algorithm constantly outputs to the operator a set of metrics it can use to check the current network status. They consist of statistical reports about the current number of join/re-joined devices and correlated percentage of vulnerable endpoints that are still operating. In this way, it is possible to check the current level of security of the network and, if needed, execute actions to decrease the level of exposure of vulnerable EDs. 
+\\
+Finally, PIVOT uses a persistent storage system to store some relevant data used to support the functioning of the detection algorithm.
+
+\vspace{5mm}
+
+From a technical point of view, this algorithm belongs to the streaming algorithms family, which main characteristics are:
+\begin{enumerate}
+	\item It processes a \textit{stream} of data (the LoRa RF traffic).
+ 	\item The input, presented as a sequence of items, can be examined in only a few passes. 
+	\item The memory access and the processing time are limited.
+\end{enumerate}
+\begin{figure}
+    \centering
+    \vspace{4ex}%
+    \includegraphics[width=0.7\linewidth]{images/pivot/architecture.png}
+    \caption{The coverage area of PIVOT}
+    \vspace{4ex}%
+    \label{fig:coverage}
+\end{figure}
+As shown in Figure \ref{fig:coverage}, our system eavesdrops on the whole LoRa radio link area. Since symmetric key encryption is applied only to the payload, PIVOT has complete access to the text-clear header of the frames it collects. In particular, it requires the fields reported in Table \ref{tab:keys}.
+\input{tables/fields}
+When the detection algorithm receives as input \textit{uplink} frame with a DevAddress \(\ a \) it has never seen before, checks which of the following two circumstances is met:
+\begin{enumerate}
+	\item The DevAddress \(\ a \) is linked to an ED that joins the network for the first time.
+	\item The DevAddress \(\ a \) is linked to an ED, already in the network, that has disconnected and performed a new join procedure.
+\end{enumerate}
+When the second scenario occurs, PIVOT recognizes that the ED has a too predictable behavior, which could be the object of attack. It triggers the alert to the operator that, modifying the parameters of the device, can prevent it from being identified again.
+\vspace{5mm}
+
+\subsection{Patterns}
+By hypothesis, each device has a transmission frequency, i.e. it regularly sends data to the server. Therefore, even when it disconnects from the network to then re-join it later, its behavior does not change. Formally, when an ED transmits packets periodically, we suppose it follows a temporal \textit{pattern} of period \(\tau\) that repeats continuously over time. Then, two DevAddress \(\ a_{1} \) and \(\ a_{2} \) which belongs to the same end-device, can be linked using a \textit{pattern-matching} strategy. 
+
+\subsubsection{Notation}
+PIVOT focuses on the time elapsed between an uplink message and the next one from the same endpoint.
+In detail, let \(t_{i}\) the timestamp TMST of a packet \(p\) with a frame counter (FCnt) \(p_{fcnt} = i\), we define the \textit{segment} as the temporal distance between two consecutive messages with the same DevAddress (DEV\_ADDR):
+\[\ s_{i} = t_{i+1} - t_{i} \]
+Consequently, we define the pattern \(\ P \) of the device with DevAddress \(\ a \) as a \textit{chain} of segments.
+\[\ P_{a} = \{ s_{1}, s_{2}, ... \}\]
+The pattern has period \(\ \tau = s_{1} + ... + s_{n} \) where \(\ n \) is the number of segments in the chain of \(\ P \). 
+\begin{figure}[H]
+    \centering
+    \vspace{4ex}%
     \includegraphics[width=0.7\linewidth]{images/pivot/pattern.PNG}
-    \caption{An example of pattern \(\ P \)}
+    \caption{An example of pattern \(\ P = \{ s_{1}, s_{2} \} \)}
+    \vspace{4ex}%
     \label{fig:pattern}
 \end{figure}
-In detail, let \(t_{i}\) the timestamp (TMST) of a packet \(p\) with a frame counter (FCnt) \(p_{fcnt} = i\), we define the segment \(\ s_{i} \):
-\[\ s_{i} = t_{i+1} - t_{i} \]
-as the temporal distance between two consecutive messages with the same DevAddress (DEV\_ADDR) and the pattern \(\ P \) with period \(\tau\) as a chain of segments: 
-\[\ P_{a} = \{ s_{1}, s_{2}, ... \}\]
-Clearly, \(\ \tau = s_{1} + ... + s_{n} \) where \(\ n \) is the number of segments in the chain of \(\ P \). For example, a device that sends packets each hour, has a pattern \(\ P = \{s\} \), with \(\ s = 1.0 \).
-\\
-PIVOT keeps track of every initialized pattern \(\ P \) by storing the following data:
+The Figure \ref{fig:pattern} reports an example of pattern \(\ P \). This end device sends uplink packets with the following frequency:
+\begin{enumerate}
+	\item Send the first packet of the sequence.
+	\item Waits half an hour, then sends the second packet of the sequence.
+	\item Waits two hours, then sends the third packet of the sequence.
+	\item Repeat the sequence.
+\end{enumerate}
+Let \(\ s_{1} = 0.5 \) (half an hour) and \(\ s_{2} = 2.0 \) (two hours), then the device has the following pattern:
+\[\ P = \{ s_{1}, s_{2} \} = \{ \textit{0.5}, \textit{2.0} \}\]
+with period \(\ \tau = s_{1} + s_{2} = 2.5 \). In other words, this device repeats its pattern every two and a half hours.
+\vspace{5mm}
+
+\subsubsection{Building and updating patterns}
+\label{updating}
+PIVOT keeps track of every initialized pattern \(\ P \) by storing the following dynamic data:
 \begin{itemize}
 	\item The chain of segment \(\ \{ s_{1}, ..., s_{n} \} \) that composes the pattern \(\ P \).
 	\item The current DevAddress \(\ a \) of the device.
 	\item The timestamp \(\ t_{f} \) of the last packet sent by the device.
-	\item A flag \textit{verified}, set to True if the pattern is complete.
+	\item A flag \textit{verified}, initially set to \texttt{False}.
 \end{itemize}
+For each new DevAddress \(\ a \), PIVOT initialize an \textit{empty} pattern \(\ P_{a} = \{\}\). The goal to fill the chain of \(\ P_{a} \), discovering the number and size of the segments that compose it. The last timestamp \(\ t_{f} \) received allow us to calculate the \textit{current} segment each time a new packet arrives and, if necessary, add it to the chain. 
+\\
+The \textit{verified} is a boolean flag that PIVOT sets to \textit{True} when it can estimate with a significantly high probability that the chain is complete. For example, the flag \(\ verified \) associate to the pattern \(\ P_{a} = \{ s_{1}, s_{2}, s_{3} \} \) is set to \textit{False} until the algorithm has correctly calculated all three segments of the chain.
 
-\subsubsection{Update patterns}
-When arrives a packet \(\ p \) with DevAddress \(\ a \) and timestamp \(\ t \), PIVOT calls the function \textit{updatePattern(a, t)}, that calculates the segment \(\ s = t - t_{f} \) and compares it with the chain of \(\ P \). 
-If \(\ s \notin P \), the chain of the pattern \(\ P \) is not yet complete: the function appends this segment at the bottom of the chain \(\ P \gets s \) and sets the flag \(\ verified = False \).
+\vspace{3mm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/pivot/updating.png}
+    \caption{Updating of a pattern with a chain of three segments. After the update PIVOT changes only the parameters \(\ t_{f}\) and \(\ verified \). The chain don't change.}
+    \label{fig:updating}
+\end{figure}
+\vspace{3mm}
 
-\vspace{5mm} %5mm vertical space
-
-\subsubsection{Pattern matching}
-PIVOT labels different patterns as necessarily linked to separate devices. It classifies two patterns \(\ P_{1} \) and \(\ P_{2} \) as distinct if:
+When PIVOT receives a new packet \(\ p \) with DevAddress \(\ a \), it triggers the \textit{update} subroutine, reported with an example in figure \ref{fig:updating}. It works as follow:
 \begin{enumerate}
-	\item Their chains are composed of different segments. 
-	\item Their chains are composed of the same segments distributed in a different order.
-	\item The first pattern's chain is a subset of the second pattern's chain.
+	\item It calculates the \textit{current} segment \(\ s = t - t_{f} \), where \(\ t \) is the timestamp of \(\ p \) and \(\ t_{f} \) is the last timestamp associated to \(\ a \)
+	\item It updates the last timestamp \(\ t_{f} = t \).
+	\item It cheks if \(\ s \) is in the chain of \(\ P \). 
+	\item It updates, if needed, the flag \(\ verified \).
 \end{enumerate}
-\begin{figure}
+If detail, if the segment \(\ s \) in not in the chain, the subroutine add it to the bottom of the chain and sets the flag \(\ verified = False \).
+On contrary, if the segment is already in the chain, PIVOT gets the flag \textit{verified} and, if it is currently set to \textit{False}, switch it to \textit{True}.
+
+\vspace{3mm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/pivot/updating_2.png}
+    \caption{Updating of a pattern with a chain of four segments. After the update PIVOT changes the parameters \(\ t_{f}\) and append the new segment in the chain. The flag \(\ verified \) remains set to False.}
+    \label{fig:updating_2}
+\end{figure}
+\vspace{3mm} %5mm vertical space
+
+The figure \ref{fig:updating_2} shows an example in which the chain of \(\ P_{a} \) remains still incomplete after the update subroutine. Since the current segment was not present in the chain, it is appended at the bottom and the flag \textit{verified} remains set to \texttt{False}. Consequently, PIVOT cannot yet determine if this pattern is complete.
+\vspace{5mm}
+
+\subsubsection{Comparing the patterns}
+Given two addresses \(\ a_{1} \) and \(\ a_{2} \) such that \(\ a_{1} \neq a_{2} \) and their patterns \(\ P_{a_{1}} \) and \(\ P_{a_{2}} \) such that \(\ P_{a_{1}} \equiv  P_{a_{2}} \). PIVOT concludes that \(\ P_{a_{1}} \) and \(\ P_{a_{2}} \) are \(\ equal \) and that \(\ a_{1} \) and \(\ a_{2}\) actually belong to the same device. This procedure is called \(\ matching\), and is the way the system idientifis which devices are too exposed to external threats.
+Two pattern \(\ P_{1} \) and \(\ P_{2} \) are equal when the following condition are respected:
+\begin{enumerate}
+	\item The two chains are of the same length i.e. the patterns have the same period.
+	\item The two chains are composed of the same number of segments.
+	\item The two chains are composed of the same segments.
+	\item the segments are \textit{sequentially} distributed in the same way within the chains.
+\end{enumerate}
+The figures \ref{fig:patterns_1} and \ref{fig:patterns_2} reports two examples where the pattern don't match.
+
+\vspace{3mm}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/pivot/patterns.PNG}
-    \caption{}
-    \label{fig:patterns}
+    \caption{Example of patterns with different period, number and type of segments.}
+    \label{fig:patterns_1}
 \end{figure}
-The first ED, which DevAddr \(\ a_{1} \), sends to the NS a packet each hour, the second one, which DevAddr is \(\ a_{2} \), sends a packet to the NS, waits 30 minutes, sends another packet, waits 2 hours, and repeats this sequence.  The first pattern consists of a single one-hour segment \(\ s_{1} = 1.0 \), the second one of two segments, one of 30 minutes \(\ s_{2} = 0.5 \) and one of 2 hours \(\ s_{3} = 2.0 \). In other words, given the following patterns: \(\ P_{1} = \{s_{1}\} \) with period \(\ \tau = 1.0 \) and \(\ P_{2} = \{s_{2}, s_{3}\} \) with period \(\ \tau = 2.5 \), Clearly, \(\ P_{1} \neq  P_{2} \) since their chains contains different segments. In the following section, we go deeper and analyze the algorithm used by PIVOT to identify vulnerable devices.
+\vspace{3mm}
 
-\subsection{Detection procedure}
-PIVOT keeps track of all the devices it detects through a vector \(\ C \). It contains the tuples \(\ <a, P_{a}> \), where \(\ a \) is the current DevAddress of a ED, and \(\ P_{a} = \{ s_{1}, ..., s_{n} \} \) the pattern it follows. In \(\ C \), there cannot be two tuples that link to same device. If \(\ E \) the set of all the ED joined in the network, necessarily \(\ length(C) \subseteq length(E ) \). 
-\\
-If after a Join Request, PIVOT gets from a packet \(\ p \) a never-seen DevAddress \(\ a \), it verifies if that device is already in the network (then, it is in \(\ C \), represented by its old DevAddress), or is a new ED to add in \(\ C \). 
+In the first exmple, the pattern \(\ P_{1} \) consists of a single one-hour segment \(\ s_{1} = 1.0 \), the pattern \(\ P_{2} \) of two segments, one of 30 minutes \(\ s_{2} = 0.5 \) and one of 2 hours \(\ s_{3} = 2.0 \). PIVOT labels the two patterns \(\ P_{1} = \{s_{1}\} \) and \(\ P_{2} = \{s_{2}, s_{3}\} \) as different. First, they have two distinct periods \(\ \tau_{1} = 1.0 \) and \(\ \tau_{2} = 2.5 \). Second, the chains are composed by a diverse number and type of segments: the first chain one has one segment, the second one has two segments.
 
-
-In other words, it compares the pattern \(\ P_{a} \), that is associated with the new DevAddress \(\ a \) to the patterns stored in \(\ C \). If there is a matching, \(\ a \) belongs a re-joined device.e
-\\
-The algorithm follows two sequential steps:
-\begin{enumerate}
-	\item Pre-Join procedure.
-	\item Main procedure.
-\end{enumerate}
-
-\begin{figure}
+\vspace{3mm}
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\linewidth]{images/pivot/pre-main.PNG}
-    \caption{Graphical representation of the Pre-Join and Main procedures}
-    \label{fig:pre_main}
+    \includegraphics[width=0.7\linewidth]{images/pivot/patterns_2.PNG}
+    \caption{Example of different patterns with the same period, number, and type of segments.}
+    \label{fig:patterns_2}
 \end{figure}
+\vspace{3mm}
 
-Let \(\ t_{0} \) the timestamp of the first packet received by PIVOT after its activation and \(\ t_{f} \) the timestamp of the first Join Request packet. The Pre-Join procedure has a limited duration and takes place in the time window \(\ t_{f} - t_{0} \). The Main procedure starts after the reception of the first Join-Request message, at \(\ t_{f} \) and remains active indefinitely.
+In the second example, the patterns have some common components, but they still don't match. Despite they have the same periods \(\ \tau_{1} = \tau_{2} = 2.5 \), the same number and the same type of segments \(\ s_{1}, s_{2}, s_{3} \), they are distributed differently in the two chains: \(\ P_{1} = \{ s_{1}, s_{2}, s_{3} \} \not\equiv P_{2} = \{ s_{1}, s_{3}, s_{2} \} \).
+\vspace{5mm}
 
-
-\subsubsection{Pre-Join procedure}
-The Pre-Join procedure gives to PIVOT an initial view about which EDs are currently operating in the network. Indeed, when the first packet \(\ p \) with timestamp \(\ t_{0} \) arrives, PIVOT has no historical trace of other devices in the network, either of the messages they sent. In other words, the vector \(\ C \) is empty.
-\\
-PIVOT, for each DevAddress \(\ a \) received in input:
-\begin{itemize}
-	\item If \(\ a \notin  C\), it initializes an empty pattern \(\ P = \{\} \) and inserts the tuple \(\ <a, P_{a} > \) in \(\ C \).
-	\item If \(\ a \in C\), it updates the pattern \(\ P_{a} \gets C \).
-\end{itemize}
-The Pre-Join terminates when intercepts a \texttt{Join request} message for the first time. In this way, the number of DevAddress \(\ a_{1}, a_{2}, ..., a_{n} \) collected during this phase matches with the number of devices that sent messages \(\ ED_{1}, ED_{2}, ..., ED_{n} \). Indeed, in LoRaWAN, an \(\ ED_{i} \) modifieds its DevAddress \(\ a_{i} \) only when it disconnects from the network and performs an OOTA again. Since the Pre-Join procedure ends at \(\ t_{f} \) (where the first Join Request arrives), there cannot be any \(\ ED \) changing the associated Dev Addresses in the time-frame \(\ t_{f} - t_{0} \).
-
-\begin{algorithm}
-    \caption{Pre-Join procedure}
-    \begin{algorithmic}[1]
-        \If{$a$ in $C$}
-            \State $P \gets C(a)$
-            \State $P.update(t)$
-        \Else
-            \State $P \gets newPattern(a)$
-            \State $C(a) \gets P$
-        \EndIf
-    \end{algorithmic}
-\end{algorithm}
-
-At the end of this task, the list \(\ C \) is filled with unique tuples \(\ <a, P_{a}> \). Nevertheless, some patterns may be incomplete. The time-frame \(\ t_{f} - t_{0} \)may be too small to estimate correctly the period \(\ \tau\) of all the patterns. Let's do an example:
-There are two devices, ED1 and ED2, with two different patterns \(\ P_{1} = \{ s_{1} \} \) and \(\ P_{2} = \{ s_{2}, s_{3} \} \), where \(\ s_{1} = 0.5 \), \(\ s_{2} = 0.33 \) and \(\ s_{3} = 2.0 \). If the Pre-Join has a time frame \(\ t_{f} - t_{0} = 1.75 \), the algorithm can't determine \(\ P_{2} \). On the contrary, since ED1 sends packets following a smaller period \(\ \tau = 0.5\), PIVOT recognizes correctly \(\ P_{1} \).
-\begin{figure}
-    \centering
-    \includegraphics[width=0.7\linewidth]{images/pivot/missing_pattern.png}
-    \caption{}
-\end{figure}
-
-PIVOT label as \texttt{verified} all the DevAddress \(\ a \) with a complete pattern \(\ P \) (such as \(\ P_{1} \) in the previous example). If define \(\ V \) as the list of verified patterns \(\ V \gets verified(C) \), then \(\ V \subseteq C\).
-
-\subsubsection{Main procedure}
-Unlike the previous stage, PIVOT cannot guarantee that a never-seen DevAddress \(\ a \) necessarily belongs to a new device. For each packet \(\ p \) received as input, we can have:
-\begin{itemize}
-	\item The DevAddress \(\ a \) is associated with a confirmed pattern \(\ P_{a} \) of \(\ C \). Then \(\ a \) belongs to an old ED already registered in the Pre-Join procedure.
-	\item The DevAddress \(\ a \) is unknown. We cannot establish if it belongs to a new device or an old one that re-joined the network.
-\end{itemize}
-
-\begin{algorithm}
-    \caption{Main procedure}
-    \begin{algorithmic}[1]
-        \If{$a$ not in $C$}
-            \If{$a$ in $U$}
-                \If{$a$ in $Q$}
-                    \State quarantine procedure
-                \EndIf
-                \State $V \gets verified(A)$
-                \ForAll{$v$ in $V$}
-                    \If{$match(P_{a}, P_{v})$}
-                        \State $Q \gets a$
-                    \Else
-                        \State $A(a).remove(P_{v})$
-                    \EndIf
-                \EndFor
-                \If{$A(a)$ is empty}
-                    \State new device
-                    \State $C \gets P_{a}$
-                \EndIf
-            \Else
-                \State $P \gets newPattern(a)$
-                \State $U(a) \gets P$
-                \State $A(a) \gets C$
-            \EndIf
-        \EndIf
-    \end{algorithmic}
-\end{algorithm}
-
-In the second scenario, PIVOT initialize a pattern \(\ P_{a} \) and puts it in the unconfirmed list \(\ U \). Then it compares \(\ P_{a} \) to the verified patterns of \(\ V \gets verified(C) \). If \(\ P_{a} \) doesn't match any element of \(\ C \), then PIVOT conclude it is unique and that the DevAddress \(\ a \) necessarily represents a new ED. PIVOT updates the \(\ C \) appending this new pattern \(\ C \gets P_{a} \). Otherwise, if there is a match \(\ P_{a} \equiv P_{v}\), PIVOT puts \(\ a \) in a new list we called Quarantine \(\ Q\). In detail, two patterns \(\ P_{1} = \{ s_{1}, ..., s_{n} \}\) and \(\ P_{2} = \{ s_{1}, ..., s_{n} \}\) matches when their segments are of the same lenght and follows the same sequence.
-% formula
-% aggiornamento dei segmenti
-When PIVOT recevis a packet \(\ p \) with DevAddress \(\ a \) and timestamp \(\ t \), it calculates the segment \(\ s = t - t_{a} \), where \(\ t_{a} \) is the last timestamp, and updates the pattern \(\ P_{a} \). For example, given a scenario where to the DevAddress \(\ a \) is linked a incomplete pattern \(\ P_{a} = \{ s_{1}, s_{2} \}\) where \(\ s_{1} = 0.5 \) and \(\ s_{2} = 2 \). If \(\ s = t - t_{a} = 0.5 \), PIVOT labels \(\ P_{a} \) as complete and expects that the next \(\ s = t - t_{a} \) will be 2.
-
-\subsubsection{Quarantine}
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.7\linewidth]{images/pivot/quarantine.PNG}
-    \caption{Quarantine}
-    \label{fig:quarantine}
-\end{figure}
-When the incoming packet \(\ p \) has a DevAddress \(\ a \in Q \), it means that the linked pattern \(\ P_{a} \) matches exactly with a pattern P of the \(\ C \) list. We can have two scenarios:
-\begin{enumerate}
-	\item \(\ P_{a} \) and \(\ P \) belongs to the same ED.
-	\item  \(\ P \) and \(\ P_{a} \) are linked to different ED but \(\ P \subseteq P_{a} \).
-\end{enumerate}
-Given the timestamp \(\ t \) of the current packet \(\ p \), PIVOT calculates the segment \(\ s = t - t_{a} \), updates \(\ P_{a} \) and check if \(\ P \) and \(\ P_{a} \) still match. If so, PIVOT updates the DevAddress linked to \(\ P \) with \(\ a \) and warns the operator. If not, \(\ P_{a} \) belongs to a new deive, then moves from \(\ U \) to \(\ C \).
-\begin{algorithm}[h!]
-    \caption{Quarantine}
-    \begin{algorithmic}[1]
-        \If{$a$ in $C$}
-            \State $P \gets C(a)$
-            \State $P.update(t)$
-        \Else
-            \State $P \gets newPattern(a)$
-            \State $C(a) \gets P$
-        \EndIf
-    \end{algorithmic}
-\end{algorithm}
-
-\subsection{Monitoring procedure}
-In this section, we first describe the metrics used by PIVOT to enumerate the percentage of identified weak devices in the network. Then, we explain how the operator can use these metrics to evaluate the effectiveness of the countermeasures it applies.
+\input{detection_procedure}
