@@ -11,7 +11,7 @@ The following are the main points followed for the development of PIVOT.
 \begin{enumerate}
 	\item \textit {Detection} of vulnerable devices. To avoid the threat described in Section \ref {address_identification}, PIVOT should properly identify that endpoints of the network whose \textit {DevAddr} - \textit {DevEUI} address pair could be discovered by unauthorized listeners.
 	\item \textit{Monitoring} the status of end-device. Our system should give the operator a transparent vision of the state of the network, showing, for example, the number of detected devices. 
-	\item \textit{Strengthening} of the network.Our system should represent an additional security layer for the LoRaWAN protocol to better preserve the confidentiality of the LoRa traffic exchanged between the endpoints and the Network Server.
+	\item \textit{Strengthening} of the network. PIVOT should represent an additional security layer for the LoRaWAN protocol to better preserve the confidentiality of the LoRa traffic exchanged between the endpoints and the Network Server.
 	\item \textit{Modelling} the behavior of periodic devices. Since EDs that send packets regularly are inclined to threat we are trying to avoid, PIVOT should discover and model their behavior.
 	\item \textit{Stream} of data. PIVOT should constantly analyze the traffic. Since it cannot analyze the entire group of messages only once they have all been sent, it has to make a decision every time a single message is exchanged.
 	\item \textit{Minimize} the delay. Vulnerable devices need to be detected quickly to leave them exposed as little time as possible.
@@ -30,7 +30,7 @@ The main policy of PIVOT is to \textit{detect} and \textit{protect} devices in t
 \vspace{5mm}
 
 \subsection{Assumptions}
-The endpoints of the LoRa network in which PIVOT operates should be LoRaWAN v1.1 compliant. If they get disconnected or lose the connection with the Network Server, should try a new activation procedure, which gives them a new DevAddress. Devices should perform exclusively the Over-the-Air Activation (OTAA) to join the network since PIVOT needs to intercept and collect \jr messages used in the activation procedure. This condition is satisfied because LoRaWAN specification recommends using OTAA for security and scalability reasons. 
+The endpoints of the LoRa network in which PIVOT operates should be LoRaWAN v1.1 compliant. If they get disconnected or lose the connection with the Network Server, should try a new activation procedure, which gives them a new DevAddress. Devices should perform exclusively the Over-the-Air Activation (OTAA) to join the network since PIVOT needs to intercept and collect \jr messages used in the activation procedure. This condition results satisfied because LoRaWAN specification recommends using OTAA for security and scalability reasons. 
 \\
 Another assumption is that these devices should transmit packets periodically. These requirements find evidence in real case studies. For example, the analysis carried out on a LoRaWAN service of an Italian operator \cite{devil} shows up that the majority of devices send 24 packets each hour, the 25th one after 30 seconds, and then repeat the process. We can argue that when a device sends packets periodically, it follows a temporal \textit{pattern}, a behavior repeated continuously over time.
 \vspace{5mm}
