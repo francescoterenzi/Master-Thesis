@@ -1,0 +1,8 @@
+\begin{mintedbox}{python}
+def __clean(self, devaddr):
+    to_analyze = self.to_analyze.copy()
+
+    for elem in to_analyze:
+        if devaddr in to_analyze[elem]:
+            self.to_analyze[elem].remove(devaddr)
+\end{mintedbox}

@@ -1,0 +1,15 @@
+\begin{mintedbox}{python}
+# generating the dataset
+generate_synt_traffic(400)
+
+# loading the dataset
+packets =  pickle.load(open("synth_traffic.pickle", "rb"))
+
+# new instance of PIVOT
+pivot = PIVOT()
+
+# PIVOT on listening
+# analyzing the dataset
+for p in packets:
+    pivot.read_packet(p)
+\end{mintedbox}

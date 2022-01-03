@@ -1,0 +1,38 @@
+\begin{mintedbox}{python}
+def add_exp_delay(packets, exp_rate):
+    assert(exp_rate>0)
+
+    # total delay of all the packets, in seconds
+    exp_total_delay = 0
+    # list percentual increases of the delay
+    exp_delay_inc = []
+    # number of exponential arrival not used. An exponential arrival is not used if it arrives before the original interarrival time of the packet
+    exp_total_notused = 0
+
+    devs = set([p.dev_eui for p in packets])  #set of all devices
+    
+    for dev in devs:
+        packets_dev = [p for p in packets if p.dev_eui == dev]
+        
+        # init exponential interarrival times generator
+        exp_gen = exp_generator(exp_rate)
+
+        # modify packet arrival times
+        t_exp = packets_dev[0].t
+        prev_t = t_exp
+        for p in packets_dev[1:]:
+            t_exp += next(exp_gen)
+            while p.t > t_exp:
+                # exponential arrival not used, it is before the original interarrival
+                exp_total_notused += 1
+                t_exp += next(exp_gen)
+            # update stat
+            exp_total_delay += t_exp - p.t
+            assert(p.t - prev_t >= 0)
+            exp_delay_inc.append((t_exp - p.t)/(p.t - prev_t))  #ratio of the delay over the original interarrival time
+            # modify packet time
+            prev_t = p.t
+            p.t = t_exp
+    
+    return packets
+\end{mintedbox}

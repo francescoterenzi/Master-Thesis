@@ -1,0 +1,20 @@
+\begin{mintedbox}{python}       
+# generate packets following the pattern up until S seconds
+packets_dev = []
+i_pattern = 0
+t = first_packet_t
+while t < S:
+    packets_dev.append(next_packet)
+    t_err = (1.0 if random()>0.5 else -1.0) * (random() * (Emax - Emin) + Emin)
+    # It could be the case that t_err is negative and |t_err| > pattern[i_pattern].
+    # In this case the following assert yields an error
+    next_packet_t = t + pattern[i_pattern] + t_err
+    if t_err < 0 and abs(t_err) > abs(pattern[i_pattern]):
+        # next_packet_t is set to be 10 seconds after the previous one
+        next_packet_t += abs(t_err) - abs(pattern[i_pattern]) + 10
+    assert(next_packet_t > t)
+    next_packet = Packet(next_packet_t, str(dev_i), "---", None, None, -1, "Unconfirmed Uplink")
+
+    i_pattern = (i_pattern+1) % pattern_len
+    t = next_packet_t
+\end{mintedbox}

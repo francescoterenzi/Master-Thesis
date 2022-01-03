@@ -1,0 +1,20 @@
+\begin{mintedbox}{python}
+def __quarantine(self, devaddr, p_timestamp):
+    suspect = self.quarantine[devaddr][0]
+    timestamp = self.quarantine[devaddr][1]
+    pattern = self.confirmed[suspect]
+
+    x = Segment(p_timestamp - timestamp, 0)
+    if x.belongs_to(pattern):
+        self.confirmed[devaddr] = self.unconfirmed[devaddr]
+        self.confirmed.pop(suspect)
+        self.__clean(suspect)
+
+    else:
+        new_pattern = self.unconfirmed[devaddr][suspect]
+        self.confirmed[devaddr] = new_pattern
+
+    self.unconfirmed.pop(devaddr)
+    self.quarantine.pop(devaddr)
+    self.to_analyze.pop(devaddr)
+\end{mintedbox}

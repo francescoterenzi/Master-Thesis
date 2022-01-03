@@ -6,43 +6,15 @@ def __main_procedure(self, p):
     
     # checks if the pattern already exists
     if devaddr in self.confirmed:
-        self.confirmed[devaddr].update(p.t)
-        self.__clean(devaddr)
+        # rest of code
 
     else:
         # check if the DevAddress has already been received
         if devaddr in self.unconfirmed:
-            self.unconfirmed[devaddr].update(p.t)
-            
-            # checks if the DevAddress is in Quarantine
-            if devaddr in self.quarantine:
-                self.__quarantine(devaddr, p.t)
-
-            else:
-                # cheks if the pattern associated with the DevAddress matches with other patterns 
-                to_analyze = self.to_analyze[devaddr]
-                unconf_pattern = self.unconfirmed[devaddr]
-
-
-                verified = list(filter(lambda x: self.confirmed[x].verified, to_analyze))
-
-                for v in verified:
-                    conf_pattern = self.confirmed[v]        
-
-                    if len(unconf_pattern.segments) == len(conf_pattern.segments):
-                        pattern_matching = conf_pattern.contains(unconf_pattern)
-                    
-                        if pattern_matching:
-                            # there is a match, the DevAddress is put in Quarantine        
-                            self.quarantine[devaddr] = (v, p.t)      
-                        else:
-                            self.to_analyze[devaddr].remove(v)
-
-                if len(self.to_analyze[devaddr]) == 0:
-                    self.__new_device(devaddr, unconf_pattern)   
+            # rest of code
 
         else:
             # initializing a new pattern
             self.unconfirmed[devaddr] = Pattern(p.t)
-            self.to_analyze[devaddr] = list(self.confirmed.keys()
+            self.to_analyze[devaddr] = list(self.confirmed.keys())
 \end{mintedbox}

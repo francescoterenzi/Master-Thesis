@@ -1,0 +1,6 @@
+\begin{mintedbox}{python}
+def __new_device(self, devaddr, unconf_pattern):
+    self.confirmed[devaddr] = unconf_pattern
+    self.unconfirmed.pop(devaddr)
+    self.to_analyze.pop(devaddr)
+\end{mintedbox}

@@ -1,0 +1,22 @@
+\begin{mintedbox}{python}
+def update(self, timestamp):
+    old_t = self.timestamp 
+    self.timestamp = timestamp
+    x = self.timestamp - old_t
+    
+    found = False
+    for s in self.segments:
+        if abs(s.mean - x) < e:
+            found = True
+            s.update(x) 
+    
+    if found:
+        self.verified = True
+
+    if not found:
+        # new segment
+        index = len(self.segments) - 1
+        segment = Segment(x, index)
+        self.segments.append(segment)
+        self.verified = False
+\end{mintedbox}

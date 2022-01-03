@@ -1,0 +1,14 @@
+\begin{mintedbox}{python}       
+# add join messages for the current device
+joins_dev = []
+i = randint(Jmin, Jmax)
+while i < len(packets_dev)-1:
+    t1 = packets_dev[i].t
+    t2 = packets_dev[i+1].t
+    assert(t2 > t1)
+    join_msg_t = t1 + (random() * (t2-t1))
+    assert(t1 < join_msg_t < t2)
+    join_packet = Packet(join_msg_t, str(dev_i), "not_available", None, None, -1, "Join Request")
+    joins_dev.append(join_packet)
+    i += randint(Jmin, Jmax)
+\end{mintedbox}

@@ -1,0 +1,28 @@
+\begin{mintedbox}{python}
+if devaddr in self.unconfirmed:
+    self.unconfirmed[devaddr].update(p.t)
+    
+    if devaddr in self.quarantine:
+        self.__quarantine(devaddr, p.t)
+
+    else:
+        to_analyze = self.to_analyze[devaddr]
+        unconf_pattern = self.unconfirmed[devaddr]
+
+
+        verified = list(filter(lambda x: self.confirmed[x].verified, to_analyze))
+
+        for v in verified:
+            conf_pattern = self.confirmed[v]        
+
+            if len(unconf_pattern.segments) == len(conf_pattern.segments):
+                pattern_matching = conf_pattern.contains(unconf_pattern)
+            
+                if pattern_matching:
+                    self.quarantine[devaddr] = (v, p.t)      
+                else:
+                    self.to_analyze[devaddr].remove(v)
+
+        if len(self.to_analyze[devaddr]) == 0:
+            self.__new_device(devaddr, unconf_pattern)  
+\end{mintedbox}
