@@ -260,7 +260,7 @@ The first variable in analysis is \(\ N \), the overall number of \textit{active
 \vspace{3mm}
 \begin{table}[H]
 \centering
-\caption{}
+\caption{The value of the parameters used to generate the traffic flow for this test.}
 \label{tab:parameter_N}
 \begin{tabular}{|l|l|}
 \hline
@@ -277,7 +277,7 @@ E                                     & [0.01, 2]           \\ \hline
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{images/implementation/N.png}
-    \caption{}
+    \caption{This figure shows the recall value as parameter N changes. The sensitivity of the system scales from from the lowest 0.94 to the highest 1.0, with an average value of 0.98}
     \label{fig:testn}
 \end{figure}
 \vspace{3mm}
@@ -292,7 +292,7 @@ Now we analyze how recall varies according to parameter \(\ P \), the maximum le
 \vspace{3mm}
 \begin{table}[H]
 \centering
-\caption{}
+\caption{The value of the parameters used to generate the traffic flow for this test.}
 \label{tab:parameter_P}
 \begin{tabular}{|l|l|}
 \hline
@@ -309,7 +309,7 @@ E                                     & [0.01, 2]           \\ \hline
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{images/implementation/P.png}
-    \caption{}
+    \caption{This figure shows the recall value as parameter P changes. The sensitivity of the system scales from a minimum of 0.83 to a maximum of 0.99, with a mean of 0.92}
     \label{fig:testp}
 \end{figure}
 \vspace{3mm}
@@ -349,6 +349,7 @@ We performed four different evaluations. The traffic is generated using the foll
 \vspace{3mm}
 \begin{table}[H]
 \centering
+\caption{The value of the parameters used to generate the traffic flow for the four tests.}
 \begin{tabular}{|l|l|}
 \hline
 \multicolumn{1}{|c|}{\textbf{Parameter}} & \textbf{Value} \\ \hline
@@ -358,10 +359,12 @@ J                                     & [20, 300]             \\ \hline
 E                                     & [0.01, 2]           \\ \hline
 \end{tabular}
 \end{table}
-\vspace{3mm}
 
 \vspace{3mm}
+
 \begin{table}[H]
+\caption{The table reports the results of four different measurement. In the first one no delay is applied to the inter-arrival times of the packets. It can be seen that by applying the countermeasures the detection is considerably reduced}
+\label{tab:countermeasures_results}
 \centering
 \begin{tabular}{l|l|l|l|l|}
 \cline{2-5}
@@ -371,9 +374,6 @@ E                                     & [0.01, 2]           \\ \hline
 \multicolumn{1}{|l|}{\textbf{NoUD}}        & 100             & 101             & 101             & 100             \\ \hline
 \multicolumn{1}{|l|}{\textbf{PoDD}} & 1.36            & 0.029           & 0.019           & 0.0             \\ \hline
 \end{tabular}
-\vspace{2mm}
-\caption{Results}
-\label{tab:countermeasures_results}
 \end{table}
 \vspace{3mm}
 
